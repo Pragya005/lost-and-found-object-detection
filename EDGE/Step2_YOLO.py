@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # Load YOLOv8 (pretrained COCO model)
-model = YOLO("yolov8n.pt")  # nano version (fastest)
+model = YOLO("yolov8m.pt")  # medium version (fastest)
 
 # Classes of interest for Lost & Found
 INTEREST_CLASSES = ["backpack", "handbag", "suitcase", "laptop", "cell phone", "book"]
