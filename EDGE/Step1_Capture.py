@@ -13,6 +13,9 @@ while True:
         print("❌ Failed to grab frame")
         break
 
+    # Mirror the frame horizontally
+    frame = cv2.flip(frame, 1)
+    
     # Show the raw video stream (for testing only)
     cv2.imshow("Raw Camera Feed", frame)
 

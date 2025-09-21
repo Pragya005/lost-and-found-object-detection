@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # Load YOLOv8 (pretrained COCO model)
-model = YOLO("yolov8n.pt")  # nano version (fastest)
+model = YOLO("yolov8m.pt")  # medium version (fastest)
 
 # Classes of interest for Lost & Found
 INTEREST_CLASSES = ["backpack", "handbag", "suitcase", "laptop", "cell phone", "book"]
@@ -20,7 +20,7 @@ while True:
         break
 
     # Run YOLOv8 detection
-    results = model(frame, conf=0.4)  # confidence threshold
+    results = model(frame, conf=0.65)  # confidence threshold
 
     for box in results[0].boxes:
         cls_id = int(box.cls[0])   # class id
