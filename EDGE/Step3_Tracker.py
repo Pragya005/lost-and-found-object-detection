@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # Load YOLOv8 model
-model = YOLO("yolov8n.pt")  # use yolov8s.pt for better accuracy
+model = YOLO("yolov8m.pt")  # use yolov8s.pt for better accuracy
 
 # Define classes of interest
 INTEREST_CLASSES = ["backpack", "handbag", "suitcase", "laptop", "cell phone", "book"]
@@ -17,6 +17,8 @@ while True:
     ret, frame = cap.read()
     if not ret:
         break
+
+    frame = cv2.flip(frame, 1) #mirror video
 
     # Run YOLOv8 with ByteTrack tracker
     results = model.track(

@@ -15,12 +15,12 @@ while True:
 
     # Mirror the frame horizontally
     frame = cv2.flip(frame, 1)
-    
+
     # Show the raw video stream (for testing only)
     cv2.imshow("Raw Camera Feed", frame)
 
     # Press ESC (27) to exit
-    if cv2.waitKey(1) == 27:
+    if cv2.waitKey(1) == 27:    
         break
 
 cap.release()

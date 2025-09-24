@@ -19,6 +19,8 @@ while True:
         print("❌ Failed to grab frame")
         break
 
+    frame = cv2.flip(frame, 1) #mirror video
+
     # Run YOLOv8 detection
     results = model(frame, conf=0.65)  # confidence threshold
 
