@@ -39,7 +39,7 @@ def save_snapshot(data):
 # When message arrives from Edge node
 def on_message(client, userdata, msg):
     data = json.loads(msg.payload.decode())
-    print("\n📥 Received unattended item from edge:")
+    print("\nReceived unattended item from edge:")
     print(json.dumps(data, indent=4))
 
     # Save image if available
