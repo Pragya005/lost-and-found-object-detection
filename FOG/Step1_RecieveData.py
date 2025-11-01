@@ -31,7 +31,7 @@ def save_snapshot(data):
         with open(save_path, "wb") as f:
             f.write(img_data)
 
-        print(f"📸 Image saved at: {os.path.abspath(save_path)}")
+        print(f"Image saved at: {os.path.abspath(save_path)}")
 
     except Exception as e:
         print(f"Error saving image: {e}")
