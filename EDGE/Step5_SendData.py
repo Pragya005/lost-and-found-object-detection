@@ -12,7 +12,13 @@ PORT = 1883
 TOPIC = "edge/fog/unattended"
 
 client = mqtt.Client()
-client.connect(BROKER, PORT, 60)
+
+# Add a reconnect loop in case broker connection drops (Wi-Fi glitch).
+try:
+    client.connect(BROKER, PORT, 60)
+except Exception as e:
+    print(f"MQTT connection failed: {e}")
+
 
 # Load YOLOv8 model
 model = YOLO("yolov8m.pt")
@@ -114,6 +120,7 @@ while True:
 
                 # Prepare detection data
                 detection_data = {
+                    # "device_id": DEVICE_ID,   #for better traceability if multiple Edge devices connect to the same broker.
                     "object_id": oid,
                     "label": label,
                     "status": status,
@@ -123,9 +130,12 @@ while True:
                 }
 
                 # Publish to fog node
-                client.publish(TOPIC, json.dumps(detection_data))
-                print(f"Sent to Fog Node: {detection_data}")
-
+                try:
+                    client.publish(TOPIC, json.dumps(detection_data))
+                    print(f"📡 Event sent to Fog Node: {detection_data}")
+                except Exception as e:
+                    print(f"⚠️ MQTT Publish Failed: {e}")
+                
                 tracked_objects[oid]["snapshot_taken"] = True
 
 
