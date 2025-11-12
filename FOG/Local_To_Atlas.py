@@ -6,8 +6,12 @@ import uvicorn
 
 # ==== CONFIGURATION ====
 LOCAL_URI = "mongodb://localhost:27017"
+LOCAL_DB_NAME = "fog_ai_detection"
+LOCAL_COLLECTION = "events"
+
 ATLAS_URI = "mongodb+srv://pragyajoney2005_db_user:C5C1xVNHlgKnwXb2@cluster0.imk4fut.mongodb.net/Minor_Project1"
-DB_NAME = "Minor_Project1"
+ATLAS_DB_NAME = "Minor_Project1"
+ATLAS_COLLECTION = "project1"
 # ========================
 
 app = FastAPI(title="MongoDB Incremental Sync Service")
@@ -18,34 +22,32 @@ scheduler = BackgroundScheduler()
 def sync_databases():
     print(f"[{datetime.now()}] 🔄 Starting incremental sync...")
 
+    # Connect to both MongoDB instances
     local_client = MongoClient(LOCAL_URI)
     atlas_client = MongoClient(ATLAS_URI)
 
-    local_db = local_client[DB_NAME]
-    atlas_db = atlas_client[DB_NAME]
+    local_db = local_client[LOCAL_DB_NAME]
+    atlas_db = atlas_client[ATLAS_DB_NAME]
 
-    for collection_name in local_db.list_collection_names():
-        print(f" → Checking collection: {collection_name}")
-        local_collection = local_db[collection_name]
-        atlas_collection = atlas_db[collection_name]
+    local_collection = local_db[LOCAL_COLLECTION]
+    atlas_collection = atlas_db[ATLAS_COLLECTION]
 
-        operations = []
+    operations = []
 
-        # Iterate through all local docs
-        for doc in local_collection.find({}):
-            # Prepare upsert operation (update if exists, insert if not)
-            operations.append(
-                UpdateOne({"_id": doc["_id"]}, {"$set": doc}, upsert=True)
-            )
+    # Iterate through all local docs
+    for doc in local_collection.find({}):
+        # Upsert: insert if new, update if already exists (based on _id)
+        operations.append(
+            UpdateOne({"_id": doc["_id"]}, {"$set": doc}, upsert=True)
+        )
 
-        # Run bulk upserts in batches to avoid memory overload
-        BATCH_SIZE = 1000
-        for i in range(0, len(operations), BATCH_SIZE):
-            batch = operations[i:i + BATCH_SIZE]
-            atlas_collection.bulk_write(batch, ordered=False)
+    # Run in batches to handle large data efficiently
+    BATCH_SIZE = 1000
+    for i in range(0, len(operations), BATCH_SIZE):
+        batch = operations[i:i + BATCH_SIZE]
+        atlas_collection.bulk_write(batch, ordered=False)
 
-        print(f"   ✅ {len(operations)} documents synced in '{collection_name}'")
-
+    print(f"   ✅ {len(operations)} documents synced from '{LOCAL_COLLECTION}' → '{ATLAS_COLLECTION}'")
     print(f"[{datetime.now()}] ✅ Incremental sync completed successfully!")
 
 
