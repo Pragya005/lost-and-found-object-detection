@@ -5,6 +5,9 @@ import json
 import base64
 import paho.mqtt.client as mqtt
 from ultralytics import YOLO
+import socket
+DEVICE_ID = socket.gethostname().upper()
+
 
 # MQTT Setup
 BROKER = "localhost"       # use IP of Fog device if different system
@@ -120,7 +123,7 @@ while True:
 
                 # Prepare detection data
                 detection_data = {
-                    # "device_id": DEVICE_ID,   #for better traceability if multiple Edge devices connect to the same broker.
+                 "device_id": DEVICE_ID,   #for better traceability if multiple Edge devices connect to the same broker.
                     "object_id": oid,
                     "label": label,
                     "status": status,
