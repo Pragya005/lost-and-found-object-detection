@@ -88,7 +88,7 @@ def on_message(client, userdata, msg):
             "status": data.get("status", "unknown"),
             "timestamp": data.get("timestamp"),
             "image_path": image_path,
-            "saved_at": datetime.utcnow()
+            "saved_at": datetime.utcnow(),
             "collected": False 
         }
 
