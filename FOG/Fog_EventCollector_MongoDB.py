@@ -37,11 +37,11 @@ print(f"✅ MongoDB connected. TTL set to {RETENTION_DAYS} days.\n")
 def save_snapshot(data):
     """Save Base64 image and return path with forward slashes."""
     try:
-        base_dir = os.path.dirname(os.path.abspath(_file_))
+        base_dir = os.path.dirname(os.path.abspath(__file__))
         save_dir = os.path.join(base_dir, "received_snapshots")
         os.makedirs(save_dir, exist_ok=True)
 
-        filename = data.get("snapshot_name", f"{data['label']}ID{data['object_id']}{int(time.time())}.jpg")
+        filename = data.get("snapshot_name", f"{data['label']}_ID{data['object_id']}_{int(time.time())}.jpg")
         save_path = os.path.join(save_dir, filename)
 
         img_data = base64.b64decode(data["image"])
@@ -88,7 +88,7 @@ def on_message(client, userdata, msg):
             "status": data.get("status", "unknown"),
             "timestamp": data.get("timestamp"),
             "image_path": image_path,
-            "saved_at": datetime.utcnow(),
+            "saved_at": datetime.utcnow()
             "collected": False 
         }
 
