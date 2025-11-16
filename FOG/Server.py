@@ -15,7 +15,7 @@ collection = db["events"]
 # ---------------------------
 @app.get("/api/detections")
 def get_detections():
-    data = list(collection.find().sort("_id", -1).limit(20))
+    data = list(collection.find().sort("_id", -1))
     
     for d in data:
         d["_id"] = str(d["_id"])

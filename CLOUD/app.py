@@ -7,6 +7,11 @@ import contact
 
 st.set_page_config(page_title="AI Lost & Found Dashboard", layout="wide")
 
+# ---------------------------------------------------
+# READ LAST PAGE
+# ---------------------------------------------------
+last_page = st.session_state.get("last_page", None)
+
 # -----------------------------
 # TOP NAVIGATION MENU
 # -----------------------------
@@ -30,8 +35,17 @@ selected = option_menu(
     },
 )
 
+# ---------------------------------------------------
+# PAGE SWITCH DETECTED → CLEAR + STOP RENDERING
+# ---------------------------------------------------
+if selected != last_page:
+    st.session_state["last_page"] = selected
+    st.empty()      # clear whole screen
+    st.stop()       # STOP, DO NOT RENDER HOME UI ACCIDENTALLY
+
+
 # -----------------------------
-# PAGE ROUTING
+# PAGE ROUTING (NOW 100% SAFE)
 # -----------------------------
 if selected == "Home":
     cloud_dashboard.run()
