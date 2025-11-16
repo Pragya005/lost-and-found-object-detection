@@ -9,7 +9,7 @@ LOCAL_URI = "mongodb://localhost:27017"
 LOCAL_DB_NAME = "fog_ai_detection"
 LOCAL_COLLECTION = "events"
 
-ATLAS_URI = "mongodb+srv://pragyajoney2005_db_user:C5C1xVNHlgKnwXb2@cluster0.imk4fut.mongodb.net/Minor_Project1"
+ATLAS_URI = "mongodb+srv://9923103056_db_user:3oPkm1uJC0gzANUd@cluster0.imk4fut.mongodb.net/"
 ATLAS_DB_NAME = "Minor_Project1"
 ATLAS_COLLECTION = "project1"
 # ========================
