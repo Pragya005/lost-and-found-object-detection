@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient, ASCENDING
 
 # MQTT Configuration
-BROKER = "localhost"   # IP of FOG laptop
+BROKER = "localhost"
 PORT = 1883
 TOPIC = "edge/fog/unattended"
 
@@ -26,7 +26,7 @@ client_db = MongoClient(MONGO_URI)
 db = client_db[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-# Create TTL index
+# ✅ Create TTL index (auto-delete after 7 days)
 collection.create_index(
     [("ttl_expire_at", ASCENDING)],
     expireAfterSeconds=RETENTION_DAYS * 24 * 60 * 60
@@ -35,13 +35,13 @@ print(f"✅ MongoDB connected. TTL set to {RETENTION_DAYS} days.\n")
 
 
 def save_snapshot(data):
-    """Save Base64 image and return file path."""
+    """Save Base64 image and return path with forward slashes."""
     try:
-        base_dir = os.path.dirname(os.path.abspath(_file_))   # FIXED
+        base_dir = os.path.dirname(os.path.abspath(_file_))
         save_dir = os.path.join(base_dir, "received_snapshots")
         os.makedirs(save_dir, exist_ok=True)
 
-        filename = data.get("snapshot_name", f"{data['label']}_{data['object_id']}.jpg")
+        filename = data.get("snapshot_name", f"{data['label']}ID{data['object_id']}{int(time.time())}.jpg")
         save_path = os.path.join(save_dir, filename)
 
         img_data = base64.b64decode(data["image"])
@@ -69,20 +69,28 @@ def on_message(client, userdata, msg):
     try:
         data = json.loads(msg.payload.decode())
 
-        # Extract Base64
-        image_data = data.pop("image", None)
-        image_base64 = image_data   # FIXED
-        
-        # Save image on disk
-        image_path = save_snapshot({**data, "image": image_data}) if image_data else None
+        # Extract Base64 BEFORE popping so we don't lose it
+        image_base64 = data.get("image")
 
-        # Create TTL time
+        # Save snapshot to disk if image exists
+        image_path = None
+        if image_base64:
+            image_path = save_snapshot({
+                **data,
+                "image": image_base64
+            })
+
+        # Remove the image field so data only contains metadata
+        data.pop("image", None)
+
+        # TTL cleanup time
         ttl_expire_at = datetime.utcnow() + timedelta(days=RETENTION_DAYS)
 
-        print("\n📩 Received unattended object:")
+        print("\n📩 Received unattended item from Edge:")
         for key, value in data.items():
             print(f"  {key}: {value}")
 
+        # FINAL DOCUMENT (correct)
         event_doc = {
             "device_id": data.get("device_id", "unknown"),
             "object_id": data.get("object_id", "unknown"),
@@ -91,17 +99,17 @@ def on_message(client, userdata, msg):
             "timestamp": data.get("timestamp"),
             "snapshot_name": data.get("snapshot_name"),
             "image_path": image_path,
-            "image_base64": img_base64,   # FIXED
+            "image_base64": image_base64,
             "saved_at": datetime.utcnow(),
-            "ttl_expire_at": ttl_expire_at,  # FIXED
             "collected": False
         }
 
         collection.insert_one(event_doc)
-        print(f"✅ Event stored in MongoDB.\n")
+        print(f"✅ Event stored in MongoDB with base64 and image path\n")
 
     except Exception as e:
         print(f"❌ Error processing message: {e}")
+
 
 
 # MQTT setup
