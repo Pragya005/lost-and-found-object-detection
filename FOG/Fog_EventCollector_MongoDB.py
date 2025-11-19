@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient, ASCENDING
 
 # MQTT Configuration
-BROKER = "localhost"
+BROKER = "localhost"   # IP of FOG laptop
 PORT = 1883
 TOPIC = "edge/fog/unattended"
 
@@ -26,7 +26,7 @@ client_db = MongoClient(MONGO_URI)
 db = client_db[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-# ✅ Create TTL index (auto-delete after 7 days)
+# Create TTL index
 collection.create_index(
     [("ttl_expire_at", ASCENDING)],
     expireAfterSeconds=RETENTION_DAYS * 24 * 60 * 60
@@ -35,13 +35,13 @@ print(f"✅ MongoDB connected. TTL set to {RETENTION_DAYS} days.\n")
 
 
 def save_snapshot(data):
-    """Save Base64 image and return path with forward slashes."""
+    """Save Base64 image and return file path."""
     try:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.dirname(os.path.abspath(_file_))   # FIXED
         save_dir = os.path.join(base_dir, "received_snapshots")
         os.makedirs(save_dir, exist_ok=True)
 
-        filename = data.get("snapshot_name", f"{data['label']}_ID{data['object_id']}_{int(time.time())}.jpg")
+        filename = data.get("snapshot_name", f"{data['label']}_{data['object_id']}.jpg")
         save_path = os.path.join(save_dir, filename)
 
         img_data = base64.b64decode(data["image"])
@@ -69,15 +69,17 @@ def on_message(client, userdata, msg):
     try:
         data = json.loads(msg.payload.decode())
 
+        # Extract Base64
         image_data = data.pop("image", None)
+        image_base64 = image_data   # FIXED
+        
+        # Save image on disk
         image_path = save_snapshot({**data, "image": image_data}) if image_data else None
 
-        # Local readable time
-        local_time = time.strftime("%Y-%m-%d %H:%M:%S")
-        # TTL cleanup time (UTC datetime)
+        # Create TTL time
         ttl_expire_at = datetime.utcnow() + timedelta(days=RETENTION_DAYS)
 
-        print("\n📩 Received unattended item from Edge:")
+        print("\n📩 Received unattended object:")
         for key, value in data.items():
             print(f"  {key}: {value}")
 
@@ -87,14 +89,16 @@ def on_message(client, userdata, msg):
             "label": data.get("label", "unknown"),
             "status": data.get("status", "unknown"),
             "timestamp": data.get("timestamp"),
+            "snapshot_name": data.get("snapshot_name"),
             "image_path": image_path,
-            "image_base64": image_base64
+            "image_base64": img_base64,   # FIXED
             "saved_at": datetime.utcnow(),
-            "collected": False 
+            "ttl_expire_at": ttl_expire_at,  # FIXED
+            "collected": False
         }
 
         collection.insert_one(event_doc)
-        print(f"✅ Event stored in MongoDB with image path: {image_path}\n")
+        print(f"✅ Event stored in MongoDB.\n")
 
     except Exception as e:
         print(f"❌ Error processing message: {e}")
