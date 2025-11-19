@@ -3,4 +3,6 @@ pymongo
 plotly
 pandas
 pillow
+live
+gTTS
 streamlit-option-menu
