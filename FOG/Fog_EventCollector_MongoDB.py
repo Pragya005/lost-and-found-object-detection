@@ -69,35 +69,47 @@ def on_message(client, userdata, msg):
     try:
         data = json.loads(msg.payload.decode())
 
-        image_data = data.pop("image", None)
-        image_path = save_snapshot({**data, "image": image_data}) if image_data else None
+        # Extract Base64 BEFORE popping so we don't lose it
+        image_base64 = data.get("image")
 
-        # Local readable time
-        local_time = time.strftime("%Y-%m-%d %H:%M:%S")
-        # TTL cleanup time (UTC datetime)
+        # Save snapshot to disk if image exists
+        image_path = None
+        if image_base64:
+            image_path = save_snapshot({
+                **data,
+                "image": image_base64
+            })
+
+        # Remove the image field so data only contains metadata
+        data.pop("image", None)
+
+        # TTL cleanup time
         ttl_expire_at = datetime.utcnow() + timedelta(days=RETENTION_DAYS)
 
         print("\n📩 Received unattended item from Edge:")
         for key, value in data.items():
             print(f"  {key}: {value}")
 
+        # FINAL DOCUMENT (correct)
         event_doc = {
             "device_id": data.get("device_id", "unknown"),
             "object_id": data.get("object_id", "unknown"),
             "label": data.get("label", "unknown"),
             "status": data.get("status", "unknown"),
             "timestamp": data.get("timestamp"),
+            "snapshot_name": data.get("snapshot_name"),
             "image_path": image_path,
-            "image_base64": image_base64
+            "image_base64": image_base64,
             "saved_at": datetime.utcnow(),
-            "collected": False 
+            "collected": False
         }
 
         collection.insert_one(event_doc)
-        print(f"✅ Event stored in MongoDB with image path: {image_path}\n")
+        print(f"✅ Event stored in MongoDB with base64 and image path\n")
 
     except Exception as e:
         print(f"❌ Error processing message: {e}")
+
 
 
 # MQTT setup
