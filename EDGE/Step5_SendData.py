@@ -17,7 +17,7 @@ client = mqtt.Client()
 client.connect(BROKER, PORT, 60)
 
 # Load YOLOv8 models
-model_items = YOLO(r"C:\Users\aryan\ai-lost-and-found-object-detection\best.pt")
+model_items = YOLO(r"D:\Minor\ai-lost-and-found-object-detection\best.pt")
 model_person = YOLO("yolov8l.pt")
 
 # Classes of interest
@@ -34,7 +34,7 @@ tracked_objects = {}
 SNAPSHOT_DIR = "snapshots"
 os.makedirs(SNAPSHOT_DIR, exist_ok=True)
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("❌ Cannot open camera")
     exit()
